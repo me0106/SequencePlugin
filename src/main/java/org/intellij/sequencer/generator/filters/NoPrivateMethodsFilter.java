@@ -14,7 +14,7 @@ public class NoPrivateMethodsFilter implements MethodFilter {
         _noPrivateMethods = noPrivateMethods;
     }
 
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         if(_noPrivateMethods
                 && (psiElement instanceof PsiMethod)
                 && isPrivateMethod((PsiMethod) psiElement))

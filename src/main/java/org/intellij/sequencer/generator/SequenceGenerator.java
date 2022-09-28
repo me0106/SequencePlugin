@@ -52,9 +52,9 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
             currentStack = topStack;
         }
 
-        if (psiElement instanceof PsiMethod)
+        if (psiElement instanceof PsiMethod) {
             return generate((PsiMethod) psiElement);
-        else if (psiElement instanceof PsiLambdaExpression) {
+        } else if (psiElement instanceof PsiLambdaExpression) {
             return generate((PsiLambdaExpression) psiElement);
         } else {
             LOGGER.warn("unsupported " + psiElement.getText());
@@ -95,9 +95,9 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
     private CallStack generateKotlin(PsiMethod psiMethod) {
 
         final IGenerator ktSequenceGenerator =
-                offsetStack.isEmpty()
-                        ? GeneratorFactory.createGenerator(psiMethod.getLanguage(), params)
-                        : GeneratorFactory.createGenerator(psiMethod.getLanguage(), params, offsetStack.pop());
+            offsetStack.isEmpty()
+                ? GeneratorFactory.createGenerator(psiMethod.getLanguage(), params)
+                : GeneratorFactory.createGenerator(psiMethod.getLanguage(), params, offsetStack.pop());
         CallStack kotlinCall = ktSequenceGenerator.generate(psiMethod.getNavigationElement(), currentStack);
         if (topStack == null) {
             topStack = kotlinCall;
@@ -108,6 +108,7 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
 
     /**
      * Generate Java method
+     *
      * @param psiMethod Java method
      * @return CallStack
      */
@@ -130,10 +131,13 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
             } else {
                 for (PsiElement psiElement : psiElements) {
                     if (psiElement instanceof PsiMethod) {
-                        if (alreadyInStack((PsiMethod) psiElement)) continue;
+                        if (alreadyInStack((PsiMethod) psiElement)) {
+                            continue;
+                        }
 
-                        if (/*!params.isSmartInterface() && */params.getImplementationWhiteList().allow(psiElement))
+                        if (/*!params.isSmartInterface() && */params.getImplementationWhiteList().allow(psiElement, 0)) {
                             methodAccept(psiElement);
+                        }
                     }
                 }
             }
@@ -150,7 +154,9 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
 
     private boolean alreadyInStack(PsiMethod psiMethod) {
         // Don't check external method, because the getTextOffset() will cause Java decompiler, it will wast of time.
-        if (psiMethod.getContainingClass() == null || MyPsiUtil.isExternal(psiMethod.getContainingClass())) return true;
+        if (psiMethod.getContainingClass() == null || MyPsiUtil.isExternal(psiMethod.getContainingClass())) {
+            return true;
+        }
         final int offset = psiMethod.getTextOffset();
         MethodDescription method = createMethod(psiMethod, offset);
         return currentStack.isRecursive(method);
@@ -159,10 +165,11 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
     private void methodAccept(PsiElement psiElement) {
         if (psiElement instanceof PsiMethod) {
             PsiMethod method = (PsiMethod) psiElement;
-            if (params.getMethodFilter().allow(method)) {
+            if (params.getMethodFilter().allow(method, 0)) {
                 PsiClass containingClass = (method).getContainingClass();
-                if (/*params.isSmartInterface() && */containingClass != null && !MyPsiUtil.isExternal(containingClass))
+                if (/*params.isSmartInterface() && */containingClass != null && !MyPsiUtil.isExternal(containingClass)) {
                     containingClass.accept(implementationFinder);
+                }
                 method.accept(this);
             }
         }
@@ -171,7 +178,9 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
     public void visitMethod(PsiMethod psiMethod) {
         int offset = offsetStack.isEmpty() ? psiMethod.getTextOffset() : offsetStack.pop();
         MethodDescription method = createMethod(psiMethod, offset);
-        if (makeMethodCallExceptCurrentStackIsRecursive(method)) return;
+        if (makeMethodCallExceptCurrentStackIsRecursive(method)) {
+            return;
+        }
         super.visitMethod(psiMethod);
     }
 
@@ -205,21 +214,28 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
             PsiClass containingClass = psiMethod.getContainingClass();
             if (MyPsiUtil.isAbstract(containingClass)) {
                 String type = containingClass.getQualifiedName();
-                if (type == null) return;
+                if (type == null) {
+                    return;
+                }
 
                 PsiMethodCallExpression psiMethodCallExpression = (PsiMethodCallExpression) callExpression;
                 PsiExpression qualifierExpression = psiMethodCallExpression.getMethodExpression().getQualifierExpression();
 
-                if (qualifierExpression == null) return;
+                if (qualifierExpression == null) {
+                    return;
+                }
 
                 PsiType psiType = qualifierExpression.getType();
 
-                if (psiType == null) return;
+                if (psiType == null) {
+                    return;
+                }
 
                 String impl = psiType.getCanonicalText();
 
-                if (!impl.equals(type))
+                if (!impl.equals(type)) {
                     params.getImplementationWhiteList().putIfAbsent(type, new ImplementClassFilter(impl));
+                }
             }
         } catch (Exception e) {
             //ignore
@@ -227,8 +243,12 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
     }
 
     private void methodCall(PsiMethod psiMethod, int offset) {
-        if (psiMethod == null) return;
-        if (!params.getMethodFilter().allow(psiMethod)) return;
+        if (psiMethod == null) {
+            return;
+        }
+        if (!params.getMethodFilter().allow(psiMethod, offset)) {
+            return;
+        }
 
         if (currentStack.level() < params.getMaxDepth()) {
             CallStack oldStack = currentStack;
@@ -237,8 +257,9 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
             generate(psiMethod);
             LOGGER.debug("- depth = " + currentStack.level() + " method = " + psiMethod.getName());
             currentStack = oldStack;
-        } else
+        } else {
             currentStack.methodCall(createMethod(psiMethod, offset));
+        }
     }
 
     private MethodDescription createMethod(PsiMethod psiMethod, int offset) {
@@ -253,18 +274,19 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
         Objects.requireNonNull(containingClass);
 
         List<String> attributes = createAttributes(psiMethod.getModifierList(), MyPsiUtil.isExternal(containingClass));
-        if (psiMethod.isConstructor())
+        if (psiMethod.isConstructor()) {
             return MethodDescription.createConstructorDescription(
-                    createClassDescription(containingClass),
-                    attributes, paramPair.argNames, paramPair.argTypes, offset);
+                createClassDescription(containingClass),
+                attributes, paramPair.argNames, paramPair.argTypes, offset);
+        }
 
         PsiType returnType = psiMethod.getReturnType();
         Objects.requireNonNull(returnType);
 
         return MethodDescription.createMethodDescription(
-                createClassDescription(containingClass),
-                attributes, psiMethod.getName(), returnType.getCanonicalText(),
-                paramPair.argNames, paramPair.argTypes, offset);
+            createClassDescription(containingClass),
+            attributes, psiMethod.getName(), returnType.getCanonicalText(),
+            paramPair.argNames, paramPair.argTypes, offset);
     }
 
     private ParamPair extractParameters(PsiParameterList parameterList) {
@@ -281,23 +303,27 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
 
     private ClassDescription createClassDescription(PsiClass psiClass) {
         return new ClassDescription(psiClass.getQualifiedName(),
-                createAttributes(psiClass.getModifierList(), MyPsiUtil.isExternal(psiClass)));
+            createAttributes(psiClass.getModifierList(), MyPsiUtil.isExternal(psiClass)));
     }
 
     private List<String> createAttributes(PsiModifierList psiModifierList, boolean external) {
-        if (psiModifierList == null)
+        if (psiModifierList == null) {
             return Collections.emptyList();
+        }
 
         List<String> attributes = new ArrayList<>();
         for (int i = 0; i < Info.RECOGNIZED_METHOD_ATTRIBUTES.length; i++) {
             String attribute = Info.RECOGNIZED_METHOD_ATTRIBUTES[i];
-            if (psiModifierList.hasModifierProperty(attribute))
+            if (psiModifierList.hasModifierProperty(attribute)) {
                 attributes.add(attribute);
+            }
         }
-        if (external)
+        if (external) {
             attributes.add(Info.EXTERNAL_ATTRIBUTE);
-        if (MyPsiUtil.isInterface(psiModifierList))
+        }
+        if (MyPsiUtil.isInterface(psiModifierList)) {
             attributes.add(Info.INTERFACE_ATTRIBUTE);
+        }
         return attributes;
     }
 
@@ -331,7 +357,7 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
      *      }
      * }
      * </pre>
-     *
+     * <p>
      * When user use Apple assignment, the <code>Apple</code> implement should be preferred.
      * <pre>
      *     Fruit fruit = new Apple()
@@ -385,13 +411,17 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
         PsiExpression re = expression.getRExpression();
         if (re instanceof PsiNewExpression) {
             PsiType type = expression.getType();
-            if (type == null) return;
+            if (type == null) {
+                return;
+            }
 
             String face = type.getCanonicalText();
             ArrayList<String> list = new ArrayList<>();
 
             PsiType psiType = re.getType();
-            if (psiType == null) return;
+            if (psiType == null) {
+                return;
+            }
 
             String impl = psiType.getCanonicalText();
 
@@ -417,8 +447,8 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
     public void visitLambdaExpression(PsiLambdaExpression expression) {
         if (SHOW_LAMBDA_CALL) {
             GeneratorFactory
-                    .createGenerator(expression.getLanguage(), params)
-                    .generate(expression, currentStack);
+                .createGenerator(expression.getLanguage(), params)
+                .generate(expression, currentStack);
         } else {
             super.visitLambdaExpression(expression);
         }
@@ -429,8 +459,9 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
             topStack = new CallStack(method);
             currentStack = topStack;
         } else {
-            if (params.isNotAllowRecursion() && currentStack.isRecursive(method))
+            if (params.isNotAllowRecursion() && currentStack.isRecursive(method)) {
                 return true;
+            }
             currentStack = currentStack.methodCall(method);
         }
         return false;
@@ -465,8 +496,9 @@ public class SequenceGenerator extends JavaRecursiveElementVisitor implements IG
         @Override
         public void visitClass(PsiClass aClass) {
             for (PsiClass psiClass : aClass.getSupers()) {
-                if (!MyPsiUtil.isExternal(psiClass))
+                if (!MyPsiUtil.isExternal(psiClass)) {
                     psiClass.accept(this);
+                }
             }
 
             if (!MyPsiUtil.isAbstract(aClass) && !MyPsiUtil.isExternal(aClass)) {

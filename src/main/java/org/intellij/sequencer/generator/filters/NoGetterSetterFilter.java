@@ -15,7 +15,7 @@ public class NoGetterSetterFilter implements MethodFilter {
         _noGetterSetters = noGetterSetters;
     }
 
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         if(_noGetterSetters
                 && (psiElement instanceof PsiMethod)
                 && isGetterSetter((PsiMethod) psiElement))

@@ -13,8 +13,8 @@ public class LambdaExprInfo extends MethodInfo {
     public LambdaExprInfo(ObjectInfo obj, Numbering numbering, List<String> attributes,
                           String method, String returnType, List<String> argNames, List<String> argTypes,
                           int startSeq, int endSeq,
-                          String enclosedMethodName, List<String> enclosedMethodArgTypes) {
-        super(obj, numbering, attributes, method, returnType, argNames, argTypes, startSeq, endSeq);
+                          String enclosedMethodName, List<String> enclosedMethodArgTypes,int callOffset) {
+        super(obj, numbering, attributes, method, returnType, argNames, argTypes, startSeq, endSeq, callOffset);
         this._enclosedMethodName = enclosedMethodName;
         this._enclosedMethodArgTypes = enclosedMethodArgTypes;
     }

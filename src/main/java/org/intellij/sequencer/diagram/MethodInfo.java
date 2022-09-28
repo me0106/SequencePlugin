@@ -18,14 +18,17 @@ public class MethodInfo extends Info {
     private final int _endSeq;
     private String _htmlDescription;
 
+    private final int _callOffset;
+
     public MethodInfo(ObjectInfo obj, Numbering numbering, List<String> attributes,
                       String method, String returnType, List<String> argNames, List<String> argTypes,
-                      int startSeq, int endSeq) {
+                      int startSeq, int endSeq, int callOffset) {
         super(attributes);
         _objectInfo = obj;
         _numbering = numbering;
         _name = method;
         _returnType = returnType;
+        _callOffset = callOffset;
         if(_returnType == null)
             _returnType = "void";
         _argNames = argNames;
@@ -93,6 +96,10 @@ public class MethodInfo extends Info {
 
     public int getEndSeq() {
         return _endSeq;
+    }
+
+    public int getCallOffset() {
+        return _callOffset;
     }
 
     public String getHtmlDescription() {

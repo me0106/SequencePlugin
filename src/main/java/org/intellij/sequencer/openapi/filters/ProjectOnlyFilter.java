@@ -15,7 +15,7 @@ public class ProjectOnlyFilter implements MethodFilter {
         _projectClassOnly = projectClassOnly;
     }
 
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         if(_projectClassOnly && isInProject(psiElement))
             return false;
         return true;

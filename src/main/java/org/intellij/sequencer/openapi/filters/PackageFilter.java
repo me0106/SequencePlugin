@@ -21,7 +21,7 @@ public class PackageFilter implements MethodFilter {
         _recursive = recursive;
     }
 
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         String packageName = MyPsiUtil.getPackageName(psiElement);
         if(packageName == null)
             return true;

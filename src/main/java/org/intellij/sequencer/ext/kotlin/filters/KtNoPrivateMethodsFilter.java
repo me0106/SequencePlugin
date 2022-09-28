@@ -11,7 +11,7 @@ public class KtNoPrivateMethodsFilter implements MethodFilter {
     }
 
     @Override
-    public boolean allow(PsiElement psiElement) { //todo kotlin
+    public boolean allow(PsiElement psiElement, int callOffset) { //todo kotlin
         return true;
     }
 

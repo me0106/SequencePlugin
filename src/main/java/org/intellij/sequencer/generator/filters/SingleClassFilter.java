@@ -17,7 +17,7 @@ public class SingleClassFilter implements MethodFilter {
         _className = className;
     }
 
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         if (psiElement instanceof PsiMethod) {
 
             PsiMethod psiMethod = (PsiMethod) psiElement;

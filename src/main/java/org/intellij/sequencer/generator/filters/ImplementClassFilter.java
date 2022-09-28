@@ -21,7 +21,7 @@ public class ImplementClassFilter implements MethodFilter {
     }
 
     @Override
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         if (psiElement instanceof PsiMethod) {
             PsiMethod psiMethod = (PsiMethod) psiElement;
             return psiMethod.getContainingClass() != null

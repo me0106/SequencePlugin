@@ -19,14 +19,14 @@ public class CompositeElementFilter implements MethodFilter {
     }
 
     /**
-     *
      * @param psiElement PsiMethod or KtFunction
+     * @param callOffset
      * @return false if any filter not allow. true when all filter allowed.
      */
     @Override
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         for (MethodFilter psiElementFilter : _filters) {
-            if (!psiElementFilter.allow(psiElement)) {
+            if (!psiElementFilter.allow(psiElement, callOffset)) {
                 return false;
             }
         }

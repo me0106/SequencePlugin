@@ -14,7 +14,7 @@ public class NoConstructorsFilter implements MethodFilter {
         _noConstructors = noConstructors;
     }
 
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         if(_noConstructors
                 && (psiElement instanceof PsiMethod)
                 && ((PsiMethod) psiElement).isConstructor())

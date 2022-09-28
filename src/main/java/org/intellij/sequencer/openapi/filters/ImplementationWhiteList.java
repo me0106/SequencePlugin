@@ -36,9 +36,9 @@ public class ImplementationWhiteList implements MethodFilter {
     }
 
     @Override
-    public boolean allow(PsiElement psiMethod) {
+    public boolean allow(PsiElement psiMethod, int callOffset) {
         for (MethodFilter filter : filters.values()) {
-            if(filter.allow(psiMethod)) {
+            if(filter.allow(psiMethod, callOffset)) {
                 return true;
             }
         }

@@ -12,7 +12,7 @@ public class KtNoConstructorsFilter implements MethodFilter {
     }
 
     @Override
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         if(_noConstructors
                 && (psiElement instanceof KtConstructor)) {
             return false;

@@ -17,7 +17,7 @@ public class KtSingleClassFilter implements MethodFilter {
 
 
     @Override
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         if (psiElement instanceof KtFunction) {
             KtFunction function = (KtFunction) psiElement;
 

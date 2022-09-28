@@ -54,7 +54,8 @@ public class SequencePanel extends JPanel implements ConfigListener {
     private String _titleName;
     private final JScrollPane _jScrollPane;
     private final HashMap<String, Integer> navIndexMap = new HashMap<>();
-    private GenerateFinishedListener finished = name -> {};
+    private GenerateFinishedListener finished = name -> {
+    };
 
     public SequencePanel(Project project, PsiElement psiMethod) {
         super(new BorderLayout());
@@ -136,32 +137,34 @@ public class SequencePanel extends JPanel implements ConfigListener {
         IGenerator generator = GeneratorFactory.createGenerator(psiElement.getLanguage(), _sequenceParams);
 
         final BackgroundableProcessIndicator progressIndicator =
-                new BackgroundableProcessIndicator(
-                        project,
-                        "Generate sequence...",
-                        PerformInBackgroundOption.ALWAYS_BACKGROUND,
-                        "Stop",
-                        "Stop",
-                        true);
+            new BackgroundableProcessIndicator(
+                project,
+                "Generate sequence...",
+                PerformInBackgroundOption.ALWAYS_BACKGROUND,
+                "Stop",
+                "Stop",
+                true);
         ReadAction
-                .nonBlocking(() -> {
-                    final CallStack callStack = generator.generate(psiElement, null);
-                    buildNaviIndex(callStack, "1");
-                    _titleName = callStack.getMethod().getTitleName();
-                    String format = new SdtFormatter().format(callStack);
-                    generate(format);
-                    progressIndicator.processFinish();
-                    return _titleName;
-                })
-                .wrapProgress(progressIndicator)
-                .finishOnUiThread(ModalityState.defaultModalityState(), title -> finished.onFinish(title))
-                .inSmartMode(project)
-                .submit(NonUrgentExecutor.getInstance());
+            .nonBlocking(() -> {
+                final CallStack callStack = generator.generate(psiElement, null);
+                buildNaviIndex(callStack, "1");
+                _titleName = callStack.getMethod().getTitleName();
+                String format = new SdtFormatter().format(callStack);
+                generate(format);
+                progressIndicator.processFinish();
+                return _titleName;
+            })
+            .wrapProgress(progressIndicator)
+            .finishOnUiThread(ModalityState.defaultModalityState(), title -> finished.onFinish(title))
+            .inSmartMode(project)
+            .submit(NonUrgentExecutor.getInstance());
 
     }
 
     private void buildNaviIndex(CallStack callStack, String level) {
-        if (callStack.getMethod() == null) return;
+        if (callStack.getMethod() == null) {
+            return;
+        }
         navIndexMap.put(level, callStack.getMethod().getOffset());
         int i = 1;
         for (CallStack call : callStack.getCalls()) {
@@ -179,8 +182,9 @@ public class SequencePanel extends JPanel implements ConfigListener {
 
         final CallStack callStack = generator.generate(psiElement, null);
 
-        if ("mmd".equalsIgnoreCase(ext))
+        if ("mmd".equalsIgnoreCase(ext)) {
             return new MermaidFormatter().format(callStack);
+        }
 
         return new PlantUMLFormatter().format(callStack);
     }
@@ -211,7 +215,7 @@ public class SequencePanel extends JPanel implements ConfigListener {
         } else if (screenObject instanceof DisplayLink) {
             DisplayLink displayLink = (DisplayLink) screenObject;
             gotoCall(displayLink.getLink().getCallerMethodInfo(),
-                    displayLink.getLink().getMethodInfo());
+                displayLink.getLink().getMethodInfo());
         }
     }
 
@@ -222,12 +226,12 @@ public class SequencePanel extends JPanel implements ConfigListener {
     private void gotoMethod(MethodInfo methodInfo) {
         if (isLambdaCall(methodInfo)) {
             navigable.openLambdaExprInEditor(
-                    methodInfo.getObjectInfo().getFullName(),
-                    methodInfo.getRealName(),
-                    methodInfo.getArgTypes(),
-                    methodInfo.getArgTypes(),
-                    methodInfo.getReturnType(),
-                    navIndexMap.getOrDefault(methodInfo.getNumbering().getName(), 0)
+                methodInfo.getObjectInfo().getFullName(),
+                methodInfo.getRealName(),
+                methodInfo.getArgTypes(),
+                methodInfo.getArgTypes(),
+                methodInfo.getReturnType(),
+                navIndexMap.getOrDefault(methodInfo.getNumbering().getName(), 0)
             );
         } else {
             String className = methodInfo.getObjectInfo().getFullName();
@@ -250,37 +254,37 @@ public class SequencePanel extends JPanel implements ConfigListener {
 
         if (isLambdaCall(toMethodInfo)) {
             navigable.openLambdaExprInEditor(
-                    fromMethodInfo.getObjectInfo().getFullName(),
-                    fromMethodInfo.getRealName(),
-                    fromMethodInfo.getArgTypes(),
-                    toMethodInfo.getArgTypes(),
-                    toMethodInfo.getReturnType(),
-                    navIndexMap.getOrDefault(toMethodInfo.getNumbering().getName(), 0)
+                fromMethodInfo.getObjectInfo().getFullName(),
+                fromMethodInfo.getRealName(),
+                fromMethodInfo.getArgTypes(),
+                toMethodInfo.getArgTypes(),
+                toMethodInfo.getReturnType(),
+                navIndexMap.getOrDefault(toMethodInfo.getNumbering().getName(), 0)
             );
         } else if (isLambdaCall(fromMethodInfo)) {
             LambdaExprInfo lambdaExprInfo = (LambdaExprInfo) fromMethodInfo;
             navigable.openMethodCallInsideLambdaExprInEditor(
-                    lambdaExprInfo.getObjectInfo().getFullName(),
-                    lambdaExprInfo.getEnclosedMethodName(),
-                    lambdaExprInfo.getEnclosedMethodArgTypes(),
-                    lambdaExprInfo.getArgTypes(),
-                    lambdaExprInfo.getReturnType(),
-                    toMethodInfo.getObjectInfo().getFullName(),
-                    toMethodInfo.getRealName(),
-                    toMethodInfo.getArgTypes(),
-                    navIndexMap.getOrDefault(toMethodInfo.getNumbering().getName(), 0)
+                lambdaExprInfo.getObjectInfo().getFullName(),
+                lambdaExprInfo.getEnclosedMethodName(),
+                lambdaExprInfo.getEnclosedMethodArgTypes(),
+                lambdaExprInfo.getArgTypes(),
+                lambdaExprInfo.getReturnType(),
+                toMethodInfo.getObjectInfo().getFullName(),
+                toMethodInfo.getRealName(),
+                toMethodInfo.getArgTypes(),
+                navIndexMap.getOrDefault(toMethodInfo.getNumbering().getName(), 0)
             );
         } else if (fromMethodInfo.getObjectInfo().hasAttribute(Info.INTERFACE_ATTRIBUTE) && fromMethodInfo.hasAttribute(Info.ABSTRACT_ATTRIBUTE)) {
             gotoMethod(toMethodInfo);
         } else {
             navigable.openMethodCallInEditor(
-                    fromMethodInfo.getObjectInfo().getFullName(),
-                    fromMethodInfo.getRealName(),
-                    fromMethodInfo.getArgTypes(),
-                    toMethodInfo.getObjectInfo().getFullName(),
-                    toMethodInfo.getRealName(),
-                    toMethodInfo.getArgTypes(),
-                    navIndexMap.getOrDefault(toMethodInfo.getNumbering().getName(), 0)
+                fromMethodInfo.getObjectInfo().getFullName(),
+                fromMethodInfo.getRealName(),
+                fromMethodInfo.getArgTypes(),
+                toMethodInfo.getObjectInfo().getFullName(),
+                toMethodInfo.getRealName(),
+                toMethodInfo.getArgTypes(),
+                navIndexMap.getOrDefault(toMethodInfo.getNumbering().getName(), 0)
             );
         }
     }
@@ -394,8 +398,9 @@ public class SequencePanel extends JPanel implements ConfigListener {
             try {
                 if (fileChooser.showSaveDialog(SequencePanel.this) == JFileChooser.APPROVE_OPTION) {
                     File selectedFile = fileChooser.getSelectedFile();
-                    if (!selectedFile.getName().endsWith("sdt"))
+                    if (!selectedFile.getName().endsWith("sdt")) {
                         selectedFile = new File(selectedFile.getParentFile(), selectedFile.getName() + ".sdt");
+                    }
 
                     _model.writeToFile(selectedFile);
                 }
@@ -496,9 +501,10 @@ public class SequencePanel extends JPanel implements ConfigListener {
 
         public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
             _sequenceParams.getMethodFilter().addFilter(new SingleMethodFilter(
-                    _methodInfo.getObjectInfo().getFullName(),
-                    _methodInfo.getRealName(),
-                    _methodInfo.getArgTypes()
+                _methodInfo.getObjectInfo().getFullName(),
+                _methodInfo.getRealName(),
+                _methodInfo.getArgTypes(),
+                _methodInfo.getCallOffset()
             ));
             generate();
 
@@ -525,8 +531,8 @@ public class SequencePanel extends JPanel implements ConfigListener {
             String[] superClass = navigable.findSuperClass(impl);
 
             _sequenceParams.getImplementationWhiteList().put(
-                    face,
-                    new ImplementClassFilter(superClass)
+                face,
+                new ImplementClassFilter(superClass)
             );
             generate();
         }
@@ -550,8 +556,8 @@ public class SequencePanel extends JPanel implements ConfigListener {
                 DisplayObject displayObject = (DisplayObject) screenObject;
                 actionGroup.add(new RemoveClassAction(displayObject.getObjectInfo()));
                 if ((displayObject.getObjectInfo().hasAttribute(Info.INTERFACE_ATTRIBUTE) || displayObject.getObjectInfo().hasAttribute(Info.ABSTRACT_ATTRIBUTE))
-                        && !displayObject.getObjectInfo().hasAttribute(Info.EXTERNAL_ATTRIBUTE)
-                        /*&& !_sequenceParams.isSmartInterface()*/) {
+                    && !displayObject.getObjectInfo().hasAttribute(Info.EXTERNAL_ATTRIBUTE)
+                    /*&& !_sequenceParams.isSmartInterface()*/) {
                     String className = displayObject.getObjectInfo().getFullName();
                     List<String> impls = navigable.findImplementations(className);
                     actionGroup.addSeparator();
@@ -564,8 +570,8 @@ public class SequencePanel extends JPanel implements ConfigListener {
                 DisplayMethod displayMethod = (DisplayMethod) screenObject;
                 actionGroup.add(new RemoveMethodAction(displayMethod.getMethodInfo()));
                 if ((displayMethod.getObjectInfo().hasAttribute(Info.INTERFACE_ATTRIBUTE) || displayMethod.getObjectInfo().hasAttribute(Info.ABSTRACT_ATTRIBUTE))
-                        && !displayMethod.getObjectInfo().hasAttribute(Info.EXTERNAL_ATTRIBUTE)
-                        /*&& !_sequenceParams.isSmartInterface()*/) {
+                    && !displayMethod.getObjectInfo().hasAttribute(Info.EXTERNAL_ATTRIBUTE)
+                    /*&& !_sequenceParams.isSmartInterface()*/) {
 
                     String className = displayMethod.getObjectInfo().getFullName();
                     String methodName = displayMethod.getMethodInfo().getRealName();
@@ -581,11 +587,12 @@ public class SequencePanel extends JPanel implements ConfigListener {
                 }
             } else if (screenObject instanceof DisplayLink) {
                 DisplayLink displayLink = (DisplayLink) screenObject;
-                if (!displayLink.isReturnLink())
+                if (!displayLink.isReturnLink()) {
                     actionGroup.add(new RemoveMethodAction(displayLink.getLink().getMethodInfo()));
+                }
             }
             ActionPopupMenu actionPopupMenu = ActionManager.getInstance().
-                    createActionPopupMenu("SequenceDiagram.Popup", actionGroup);
+                createActionPopupMenu("SequenceDiagram.Popup", actionGroup);
             Component invoker = screenObject instanceof DisplayObject ? _display.getHeader() : _display;
             actionPopupMenu.getComponent().show(invoker, x, y);
         }

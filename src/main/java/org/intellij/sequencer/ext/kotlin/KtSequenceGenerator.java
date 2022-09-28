@@ -258,7 +258,7 @@ public class KtSequenceGenerator extends KtTreeVisitorVoid implements IGenerator
     private void methodCall(PsiElement psiElement, int offset) {
         if (psiElement == null) return;
         //fixme: should support kotlin filter
-        if (!params.getMethodFilter().allow(psiElement)) return;
+        if (!params.getMethodFilter().allow(psiElement, offset)) return;
 
         if (currentStack.level() < params.getMaxDepth()) {
             CallStack oldStack = currentStack;

@@ -62,14 +62,16 @@ public class Parser {
     private void resolveBackCalls() {
         HashMap<Numbering, MethodInfo> callsMap = new HashMap<>();
         for (Link link : _linkList) {
-            if (!(link instanceof Call))
+            if (!(link instanceof Call)) {
                 continue;
+            }
             callsMap.put(link.getMethodInfo().getNumbering(), link.getMethodInfo());
         }
         for (Link link : _linkList) {
             Numbering numbering = link.getMethodInfo().getNumbering().getPreviousNumbering();
-            if (numbering != null)
+            if (numbering != null) {
                 link.setCallerMethodInfo(callsMap.get(numbering));
+            }
         }
     }
 
@@ -95,7 +97,7 @@ public class Parser {
             ObjectInfo objectInfo = new ObjectInfo(ObjectInfo.ACTOR_NAME, new ArrayList<>(), _currentHorizontalSeq);
             ++_currentHorizontalSeq;
             _objList.add(objectInfo);
-            _callInfoStack.push(new CallInfo(objectInfo, "aMethod", _currentVerticalSeq));
+            _callInfoStack.push(new CallInfo(objectInfo, "aMethod", _currentVerticalSeq, m.getOffset()));
         }
         ObjectInfo objectInfo = new ObjectInfo(c.getClassName(), c.getAttributes(), _currentHorizontalSeq);
         int i = _objList.indexOf(objectInfo);
@@ -107,12 +109,13 @@ public class Parser {
         }
 
         CallInfo callInfo = isLambda ? new LambdaInfo(objectInfo, m, _currentVerticalSeq)
-                : new CallInfo(objectInfo, m, _currentVerticalSeq);
+            : new CallInfo(objectInfo, m, _currentVerticalSeq);
 
         MethodInfo methodInfo = createMethodInfo(isLambda, callInfo);
 
-        if (LOGGER.isDebugEnabled())
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("addCall(...) calling " + callInfo + " seq is " + _currentVerticalSeq);
+        }
 
         if (!_callInfoStack.isEmpty()) {
             CallInfo currentInfo = _callInfoStack.peek();
@@ -130,20 +133,22 @@ public class Parser {
     @NotNull
     private MethodInfo createMethodInfo(boolean isLambda, CallInfo callInfo) {
         return isLambda ?
-                new LambdaExprInfo(
-                        callInfo.getObj(),
-                        callInfo.getNumbering(), callInfo.getAttributes(),
-                        callInfo.getMethod(), callInfo.getReturnType(),
-                        callInfo.getArgNames(), callInfo.getArgTypes(),
-                        callInfo.getStartingVerticalSeq(), _currentVerticalSeq,
-                        ((LambdaInfo) callInfo).getEnclosedMethodName(),
-                        ((LambdaInfo) callInfo).getEnclosedMethodArgTypes()
-                ) :
-                new MethodInfo(callInfo.getObj(),
-                        callInfo.getNumbering(), callInfo.getAttributes(),
-                        callInfo.getMethod(), callInfo.getReturnType(),
-                        callInfo.getArgNames(), callInfo.getArgTypes(),
-                        callInfo.getStartingVerticalSeq(), _currentVerticalSeq);
+            new LambdaExprInfo(
+                callInfo.getObj(),
+                callInfo.getNumbering(), callInfo.getAttributes(),
+                callInfo.getMethod(), callInfo.getReturnType(),
+                callInfo.getArgNames(), callInfo.getArgTypes(),
+                callInfo.getStartingVerticalSeq(), _currentVerticalSeq,
+                ((LambdaInfo) callInfo).getEnclosedMethodName(),
+                ((LambdaInfo) callInfo).getEnclosedMethodArgTypes(),
+                callInfo.getCallOffset()
+            ) :
+            new MethodInfo(callInfo.getObj(),
+                callInfo.getNumbering(), callInfo.getAttributes(),
+                callInfo.getMethod(), callInfo.getReturnType(),
+                callInfo.getArgNames(), callInfo.getArgTypes(),
+                callInfo.getStartingVerticalSeq(), _currentVerticalSeq,
+                callInfo.getCallOffset());
     }
 
     private void addReturn() {
@@ -155,8 +160,9 @@ public class Parser {
 
         callInfo.getObj().addMethod(methodInfo);
 
-        if (LOGGER.isDebugEnabled())
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("addReturn(...) returning from " + callInfo + " seq is " + _currentVerticalSeq);
+        }
 
         if (!_callInfoStack.isEmpty()) {
             CallInfo currentInfo = _callInfoStack.peek();
@@ -205,8 +211,9 @@ public class Parser {
         public void push(CallInfo callInfo) {
             stack.push(callInfo);
             nPointerCounter++;
-            if (nPointerCounter > 1)
+            if (nPointerCounter > 1) {
                 nPointerCallInfo = callInfo;
+            }
         }
 
         public CallInfo pop() {
@@ -216,8 +223,9 @@ public class Parser {
         }
 
         public Numbering getNumbering() {
-            if (nPointerCallInfo == null)
+            if (nPointerCallInfo == null) {
                 return peek().getNumbering();
+            }
             return nPointerCallInfo.getNumbering();
         }
 
@@ -246,15 +254,20 @@ public class Parser {
         private Call _call;
         private final int _startingSeq;
 
-        CallInfo(ObjectInfo obj, String method, int startingSeq) {
+        private final int _callOffset;
+
+
+        CallInfo(ObjectInfo obj, String method, int startingSeq, int callOffset) {
             _obj = obj;
             _method = method;
             _startingSeq = startingSeq;
+            _callOffset = callOffset;
         }
 
         CallInfo(ObjectInfo obj, MethodDescription m, int startingSeq) {
             _obj = obj;
             _method = m.getMethodName();
+            _callOffset = m.getOffset();
             _attributes.addAll(m.getAttributes());
             _argNames.addAll(m.getArgNames());
             _argTypes.addAll(m.getArgTypes());
@@ -266,10 +279,11 @@ public class Parser {
             int stackLevel = _callInfoStack.size() - 1;
             Numbering numbering = _callInfoStack.getNumbering();
             _numbering = new Numbering(numbering);
-            if (_numbering.level() <= stackLevel)
+            if (_numbering.level() <= stackLevel) {
                 _numbering.addNewLevel();
-            else
+            } else {
                 _numbering.incrementLevel(stackLevel);
+            }
         }
 
         Call createCall(CallInfo to) {
@@ -311,6 +325,10 @@ public class Parser {
 
         int getStartingVerticalSeq() {
             return _startingSeq;
+        }
+
+        public int getCallOffset() {
+            return _callOffset;
         }
 
         public String toString() {

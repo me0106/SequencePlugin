@@ -12,7 +12,7 @@ public class KtNoGetterSetterFilter implements MethodFilter {
     }
 
     @Override
-    public boolean allow(PsiElement psiElement) {
+    public boolean allow(PsiElement psiElement, int callOffset) {
         if(_noGetterSetters
                 && (psiElement instanceof KtFunction)
                 && isGetterSetter((KtFunction) psiElement)) {

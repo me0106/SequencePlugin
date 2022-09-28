@@ -23,6 +23,8 @@ public class SequenceParamsState implements PersistentStateComponent<SequencePar
     @Deprecated(since = "2.2.0", forRemoval = true)
     public boolean smartInterface = false;
 
+    public boolean noLambda = false;
+
     @Transient
     private final List<ConfigListener> _listeners = new ArrayList<>();
 
